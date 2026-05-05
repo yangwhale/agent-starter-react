@@ -26,14 +26,19 @@ function toastAlert(toast: ToastProps) {
 
 export function useAgentErrors() {
   const agent = useAgent();
-  const { isConnected, end } = useSessionContext();
+  const { isConnected } = useSessionContext();
 
   useEffect(() => {
     if (isConnected && agent.state === 'failed') {
       const reasons = agent.failureReasons;
 
+      // CloseCrab 改造: 不再调 end() 主动断开 session.
+      // 默认 20 秒 agent-init timeout 太严: 我们的 worker join 了 room 但
+      // 不会主动 publish lk.agent.state="listening" attribute, 前端误判为
+      // "agent did not complete initializing" 触发 end(). 实际上 worker 是
+      // 健康的, 用户说话它就能回. 只 toast 提醒, 不强制断开.
       toastAlert({
-        title: 'Session ended',
+        title: 'Agent state warning',
         description: (
           <>
             {reasons.length > 1 && (
@@ -44,22 +49,12 @@ export function useAgentErrors() {
               </ul>
             )}
             {reasons.length === 1 && <p className="w-full">{reasons[0]}</p>}
-            <p className="w-full">
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://docs.livekit.io/agents/start/voice-ai/"
-                className="whitespace-nowrap underline"
-              >
-                See quickstart guide
-              </a>
-              .
+            <p className="w-full text-xs opacity-70">
+              Session 保持开启 — 直接说话试试.
             </p>
           </>
         ),
       });
-
-      end();
     }
-  }, [agent, isConnected, end]);
+  }, [agent, isConnected]);
 }
