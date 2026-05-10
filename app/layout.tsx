@@ -1,6 +1,7 @@
 import { Public_Sans } from 'next/font/google';
 import localFont from 'next/font/local';
 import { headers } from 'next/headers';
+import Script from 'next/script';
 import { ThemeProvider } from '@/components/app/theme-provider';
 import { ThemeToggle } from '@/components/app/theme-toggle';
 import { cn } from '@/lib/shadcn/utils';
@@ -63,6 +64,23 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         {styles && <style>{styles}</style>}
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
+        {/* Live2D stack — order matters. pixi-live2d-display 0.4.0 reads window.PIXI on init.
+            Versions pinned in CloseCrab/docs/live2d-emotion-system.md §2. */}
+        <Script
+          src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"
+          strategy="beforeInteractive"
+        />
+        <Script id="pixi-window" strategy="beforeInteractive">
+          {`if (typeof PIXI !== 'undefined') { window.PIXI = PIXI; }`}
+        </Script>
+        <Script
+          src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"
+          strategy="beforeInteractive"
+        />
+        <Script
+          src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js"
+          strategy="beforeInteractive"
+        />
       </head>
       <body className="overflow-x-hidden">
         <ThemeProvider

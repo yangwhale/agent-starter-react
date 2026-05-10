@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, type MotionProps, motion } from 'motion/react';
 import { useAgent, useSessionContext, useSessionMessages } from '@livekit/components-react';
 import { AgentChatTranscript } from '@/components/agents-ui/agent-chat-transcript';
@@ -9,6 +9,7 @@ import {
   type AgentControlBarControls,
 } from '@/components/agents-ui/agent-control-bar';
 import { Shimmer } from '@/components/ai-elements/shimmer';
+import { type EmotionKey, extractEmotion } from '@/lib/live2d-emotion';
 import { cn } from '@/lib/shadcn/utils';
 import { TileLayout } from './tile-view';
 
@@ -151,6 +152,8 @@ export interface AgentSessionView_01Props {
   audioVisualizerRadialRadius?: number;
   /** Stroke width of the wave path when `audioVisualizerType` is `wave`. */
   audioVisualizerWaveLineWidth?: number;
+  /** When true, render the Live2D Natori avatar in place of the audio visualizer. */
+  useLive2DAvatar?: boolean;
   /** Optional class name merged onto the outer `<section>` container. */
   className?: string;
 }
@@ -171,6 +174,7 @@ export function AgentSessionView_01({
   audioVisualizerRadialBarCount,
   audioVisualizerRadialRadius,
   audioVisualizerWaveLineWidth,
+  useLive2DAvatar = false,
   ref,
   className,
   ...props
@@ -180,6 +184,25 @@ export function AgentSessionView_01({
   const [chatOpen, setChatOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { state: agentState } = useAgent();
+
+  // TODO(phase 2): switch to Data Channel emotion events once livekit_io.py
+  // publishes them. For now we parse Gemini TTS [tag] markers out of the
+  // latest agent transcription / chat message and feed it to <Live2DAvatar>.
+  const live2dEmotion = useMemo<EmotionKey>(() => {
+    if (!useLive2DAvatar) return 'calm';
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i] as unknown as {
+        type?: string;
+        from?: { isLocal?: boolean };
+        message?: string;
+      };
+      if (m.from?.isLocal) continue;
+      const text = m.message;
+      if (typeof text !== 'string' || !text) continue;
+      return extractEmotion(text);
+    }
+    return 'calm';
+  }, [messages, useLive2DAvatar]);
 
   const controls: AgentControlBarControls = {
     leave: true,
@@ -235,6 +258,8 @@ export function AgentSessionView_01({
         audioVisualizerGridRowCount={audioVisualizerGridRowCount}
         audioVisualizerGridColumnCount={audioVisualizerGridColumnCount}
         audioVisualizerWaveLineWidth={audioVisualizerWaveLineWidth}
+        useLive2DAvatar={useLive2DAvatar}
+        live2dEmotion={live2dEmotion}
       />
       {/* Bottom */}
       <motion.div

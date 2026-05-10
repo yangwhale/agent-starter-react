@@ -8,6 +8,8 @@ import {
   useTracks,
   useVoiceAssistant,
 } from '@livekit/components-react';
+import { Live2DAvatar } from '@/components/agents-ui/live2d-avatar';
+import type { EmotionKey } from '@/lib/live2d-emotion';
 import { cn } from '@/lib/shadcn/utils';
 import { AudioVisualizer } from './audio-visualizer';
 
@@ -78,6 +80,8 @@ interface TileLayoutProps {
   audioVisualizerRadialBarCount?: number;
   audioVisualizerRadialRadius?: number;
   audioVisualizerBarCount?: number;
+  useLive2DAvatar?: boolean;
+  live2dEmotion?: EmotionKey;
 }
 
 export function TileLayout({
@@ -91,6 +95,8 @@ export function TileLayout({
   audioVisualizerGridRowCount,
   audioVisualizerGridColumnCount,
   audioVisualizerWaveLineWidth,
+  useLive2DAvatar = false,
+  live2dEmotion = 'calm',
 }: TileLayoutProps) {
   const { videoTrack: agentVideoTrack } = useVoiceAssistant();
   const [screenShareTrack] = useTracks([Track.Source.ScreenShare]);
@@ -119,8 +125,45 @@ export function TileLayout({
             ])}
           >
             <AnimatePresence mode="popLayout">
-              {!isAvatar && (
-                // Audio Agent
+              {!isAvatar && useLive2DAvatar && (
+                // Live2D virtual avatar with mini visualizer underneath
+                <motion.div
+                  key="live2d"
+                  layoutId="agent"
+                  initial={{ opacity: 0, scale: 1 }}
+                  animate={{ opacity: 1, scale: chatOpen ? 0.2 : 1 }}
+                  transition={{
+                    ...ANIMATION_TRANSITION,
+                    delay: animationDelay,
+                  }}
+                  className={cn(
+                    'flex flex-col items-center gap-3',
+                    'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'aspect-square h-[260px] md:h-[320px]',
+                      chatOpen && 'rounded-2xl shadow-2xl/10'
+                    )}
+                  >
+                    <Live2DAvatar emotion={live2dEmotion} className="h-full w-full" />
+                  </div>
+                  <AudioVisualizer
+                    key="audio-visualizer-mini"
+                    audioVisualizerType="bar"
+                    audioVisualizerColor={audioVisualizerColor}
+                    audioVisualizerColorShift={audioVisualizerColorShift}
+                    audioVisualizerBarCount={5}
+                    isChatOpen={chatOpen}
+                    className="mini"
+                    style={{ color: audioVisualizerColor }}
+                  />
+                </motion.div>
+              )}
+
+              {!isAvatar && !useLive2DAvatar && (
+                // Audio Agent (fallback to original visualizer-only layout)
                 <motion.div
                   key="agent"
                   layoutId="agent"

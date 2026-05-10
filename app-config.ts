@@ -25,6 +25,9 @@ export interface AppConfig {
   audioVisualizerRadialRadius?: number;
   audioVisualizerWaveLineWidth?: number;
 
+  /** Render the Live2D Natori avatar in place of the audio visualizer. */
+  useLive2DAvatar?: boolean;
+
   // agent dispatch configuration
   agentName?: string;
 
@@ -47,6 +50,9 @@ export const APP_CONFIG_DEFAULTS: AppConfig = {
   logoDark: '/lk-logo-dark.svg',
   accentDark: '#1fd5f9',
   startButtonText: 'Start call',
+
+  // Render the Live2D virtual avatar (Natori) instead of the bar visualizer.
+  useLive2DAvatar: true,
 
   // optional: audio visualization configuration
   // audioVisualizerType: 'bar',

@@ -69,6 +69,7 @@ export function ViewController({ appConfig }: ViewControllerProps) {
           audioVisualizerRadialBarCount={appConfig.audioVisualizerRadialBarCount}
           audioVisualizerRadialRadius={appConfig.audioVisualizerRadialRadius}
           audioVisualizerWaveLineWidth={appConfig.audioVisualizerWaveLineWidth}
+          useLive2DAvatar={appConfig.useLive2DAvatar}
           className="fixed inset-0"
         />
       )}

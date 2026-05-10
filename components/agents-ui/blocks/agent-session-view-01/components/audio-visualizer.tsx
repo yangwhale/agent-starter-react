@@ -119,8 +119,12 @@ export function AudioVisualizer({
     default: {
       let size: 'icon' | 'sm' | 'md' | 'lg' | 'xl' = 'icon';
       let sizedClassName = cn('size-[300px] md:size-[450px]', className);
+      const isMini = typeof className === 'string' && className.includes('mini');
 
-      if (audioVisualizerBarCount <= 5) {
+      if (isMini && audioVisualizerBarCount <= 5) {
+        size = 'icon';
+        sizedClassName = cn('size-[80px] *:min-h-[12px] *:w-[12px] gap-1', className);
+      } else if (audioVisualizerBarCount <= 5) {
         size = 'xl';
         sizedClassName = cn('size-[450px] *:min-h-[64px] *:w-[64px] gap-4', className);
       } else if (audioVisualizerBarCount <= 10) {
