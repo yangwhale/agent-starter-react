@@ -138,12 +138,12 @@ export function TileLayout({
                   }}
                   className={cn(
                     'flex flex-col items-center gap-3',
-                    'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                    'absolute top-[10%] left-1/2 -translate-x-1/2'
                   )}
                 >
                   <div
                     className={cn(
-                      'aspect-square h-[260px] md:h-[320px]',
+                      'aspect-square h-[400px] md:h-[480px]',
                       chatOpen && 'rounded-2xl shadow-2xl/10'
                     )}
                   >
