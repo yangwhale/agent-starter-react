@@ -8,6 +8,7 @@ import {
   AgentControlBar,
   type AgentControlBarControls,
 } from '@/components/agents-ui/agent-control-bar';
+import { PushToTalkButton } from '@/components/agents-ui/push-to-talk-button';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 import { type EmotionKey, extractEmotion } from '@/lib/live2d-emotion';
 import { cn } from '@/lib/shadcn/utils';
@@ -154,6 +155,11 @@ export interface AgentSessionView_01Props {
   audioVisualizerWaveLineWidth?: number;
   /** When true, render the Live2D Natori avatar in place of the audio visualizer. */
   useLive2DAvatar?: boolean;
+  /**
+   * Broadcast 模式：用户作为 subscriber-only 收听 bot TTS, 不发 mic 不打字。
+   * 砍掉 mic/chat/camera/screen 控件, 只留 leave。Avatar + emotion mapping 照常工作。
+   */
+  broadcastMode?: boolean;
   /** Optional class name merged onto the outer `<section>` container. */
   className?: string;
 }
@@ -175,6 +181,7 @@ export function AgentSessionView_01({
   audioVisualizerRadialRadius,
   audioVisualizerWaveLineWidth,
   useLive2DAvatar = false,
+  broadcastMode = false,
   ref,
   className,
   ...props
@@ -204,13 +211,21 @@ export function AgentSessionView_01({
     return 'calm';
   }, [messages, useLive2DAvatar]);
 
-  const controls: AgentControlBarControls = {
-    leave: true,
-    microphone: true,
-    chat: supportsChatInput,
-    camera: supportsVideoInput,
-    screenShare: supportsScreenShare,
-  };
+  const controls: AgentControlBarControls = broadcastMode
+    ? {
+        leave: true,
+        microphone: false,
+        chat: false,
+        camera: false,
+        screenShare: false,
+      }
+    : {
+        leave: true,
+        microphone: true,
+        chat: supportsChatInput,
+        camera: supportsVideoInput,
+        screenShare: supportsScreenShare,
+      };
 
   useEffect(() => {
     const lastMessage = messages.at(-1);
@@ -230,7 +245,7 @@ export function AgentSessionView_01({
       <Fade top className="absolute inset-x-4 top-0 z-10 h-40" />
       {/* transcript */}
 
-      <div className="absolute top-0 bottom-[135px] flex w-full flex-col md:bottom-[170px]">
+      <div className="absolute top-0 bottom-[170px] flex w-full flex-col md:bottom-[200px]">
         <AnimatePresence>
           {chatOpen && (
             <motion.div
@@ -240,7 +255,7 @@ export function AgentSessionView_01({
               <AgentChatTranscript
                 agentState={agentState}
                 messages={messages}
-                className="mx-auto w-full max-w-2xl [&_.is-user>div]:rounded-[22px] [&>div>div]:px-4 [&>div>div]:pt-40 md:[&>div>div]:px-6"
+                className="mx-auto w-full max-w-2xl [&>div>div]:px-4 [&>div>div]:pt-4 [&>div>div]:pb-8 md:[&>div>div]:px-6"
               />
             </motion.div>
           )}
@@ -284,6 +299,7 @@ export function AgentSessionView_01({
         )}
         <div className="bg-background relative mx-auto max-w-2xl pb-3 md:pb-12">
           <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
+          {!broadcastMode && session.isConnected && <PushToTalkButton />}
           <AgentControlBar
             variant="livekit"
             controls={controls}
