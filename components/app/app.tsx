@@ -22,10 +22,20 @@ function AppSetup() {
 
 interface AppProps {
   agentName?: string;
+  /** 网址上的 `?room=` —— 决定进哪个 bot 的房间。不给就让后端随机开一个。 */
+  roomName?: string;
 }
 
-export function App({ agentName }: AppProps) {
-  const tokenSource = useMemo(() => TokenSource.endpoint('/api/token'), []);
+export function App({ agentName, roomName }: AppProps) {
+  // 房间名只能走查询串：`TokenSource.endpoint()` 只收一个 URL，
+  // 没有给请求体加字段的钩子（想塞 body 得自己实现整个 TokenSource）。
+  const tokenSource = useMemo(
+    () =>
+      TokenSource.endpoint(
+        roomName ? `/api/token?room=${encodeURIComponent(roomName)}` : '/api/token'
+      ),
+    [roomName]
+  );
 
   const session = useSession(tokenSource, agentName ? { agentName } : undefined);
 
